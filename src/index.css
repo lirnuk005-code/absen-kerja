@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cmd-bg: #000000;
+  --color-cmd-panel: #0A0A0A;
+  --color-cmd-card: #0A0A0A;
+  --color-cmd-border: #1E1E1E;
+  --color-cmd-text: #EAEAEA;
+  --color-cmd-muted: #888888;
+  --color-cmd-accent: #FFFFFF;
+  
+  --color-cmd-green: #00FF66;
+  --color-cmd-purple: #B266FF;
+  --color-cmd-orange: #FF9900;
+  
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "Inter", "Roboto", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cmd-bg);
+    color: var(--color-cmd-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6, .font-mono {
+    font-family: var(--font-mono);
+  }
+  
+  ::selection {
+    background-color: #333;
+    color: white;
+  }
+}
+
+@layer components {
+  /* Cards with the dashed border look from the screenshot */
+  .cmd-card {
+    background-color: var(--color-cmd-card);
+    border: 1px dashed var(--color-cmd-border);
+    position: relative;
+  }
+
+  /* Optional corner crosshairs to mimic CommandCode style */
+  .cmd-card::before, .cmd-card::after, .cmd-card-inner::before, .cmd-card-inner::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background-color: #333;
+  }
+  
+  .cmd-card::before { top: -2px; left: -2px; }
+  .cmd-card::after { top: -2px; right: -2px; }
+  
+  .cmd-card-inner {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  
+  .cmd-card-inner::before { bottom: -2px; left: -2px; }
+  .cmd-card-inner::after { bottom: -2px; right: -2px; }
+
+  /* Interactive Card for Buttons */
+  .cmd-action-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .cmd-action-card:hover {
+    border-color: #444;
+    background-color: #111;
+  }
+  
+  .cmd-action-card:active {
+    transform: scale(0.98);
+  }
+
+  .cmd-action-card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+}
