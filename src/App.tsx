@@ -27,7 +27,7 @@ type TimeEntry = {
 };
 
 type UserType = 'Ketut' | 'Deksa' | null;
-type ActionType = 'clock_in' | 'suspend' | 'clock_out' | 'day_off' | null;
+type ActionType = 'clock_in' | 'suspend' | 'clock_out' | 'day_off' | 'salary_received' | null;
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<UserType>(() => {
@@ -39,6 +39,7 @@ export default function App() {
 
   const [pendingAction, setPendingAction] = useState<ActionType>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [periodStart, setPeriodStart] = useState<Date | null>(null);
   const [kpiIndex, setKpiIndex] = useState(0);
 
   useEffect(() => {
@@ -70,18 +71,34 @@ export default function App() {
 
   const fetchDashboardData = async () => {
     try {
-      const startOfThisMonth = startOfMonth(new Date()).toISOString();
+      // 1. Cari marker salary_received terbaru sebagai awal periode
+      const { data: markerData, error: markerError } = await supabase
+        .from('time_entries')
+        .select('*')
+        .eq('entry_type', 'salary_received')
+        .order('clock_in', { ascending: false })
+        .limit(1);
+
+      if (markerError) throw markerError;
+
+      const latestMarker = markerData?.[0];
+      const periodStartDate = latestMarker ? new Date(latestMarker.clock_in) : startOfMonth(new Date());
+      setPeriodStart(periodStartDate);
+
+      // 2. Ambil entri mulai awal bulan kalender yang memuat periodStart
+      //    (log lama satu bulan terakhir tetap tampil di Recent Logs)
+      const since = startOfMonth(periodStartDate).toISOString();
 
       const { data, error } = await supabase
         .from('time_entries')
         .select('*')
-        .gte('clock_in', startOfThisMonth)
+        .gte('clock_in', since)
         .order('clock_in', { ascending: false });
 
       if (error) throw error;
 
       setEntries(data || []);
-      const active = data?.find((e) => !e.clock_out);
+      const active = data?.find((e) => !e.clock_out && e.entry_type !== 'salary_received');
       setActiveEntry(active || null);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -115,6 +132,17 @@ export default function App() {
 
         setActiveEntry(null);
         setEntries(entries.map(e => e.id === activeEntry.id ? { ...e, clock_out: now } : e));
+      } else if (pendingAction === 'salary_received') {
+        const now = new Date().toISOString();
+        const { data, error } = await supabase
+          .from('time_entries')
+          .insert([{ clock_in: now, clock_out: now, entry_type: 'salary_received' }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        setEntries([data, ...entries]);
+        setPeriodStart(new Date(now));
       } else if (pendingAction === 'day_off') {
         const now = new Date().toISOString();
         const { data, error } = await supabase
@@ -143,15 +171,21 @@ export default function App() {
   };
 
   const calculateMonthlySeconds = () => {
+    const start = periodStart?.getTime() ?? startOfMonth(new Date()).getTime();
     const completedSeconds = entries
-      .filter((e) => e.clock_out && e.entry_type !== 'day_off')
+      .filter((e) =>
+        e.clock_out &&
+        e.entry_type !== 'day_off' &&
+        e.entry_type !== 'salary_received' &&
+        new Date(e.clock_in).getTime() >= start
+      )
       .reduce((total, e) => total + differenceInSeconds(new Date(e.clock_out!), new Date(e.clock_in)), 0);
     return completedSeconds + currentDuration;
   };
 
   const calculateTodaySeconds = () => {
     const today = startOfDay(new Date()).getTime();
-    const todayEntries = entries.filter(e => new Date(e.clock_in).getTime() >= today);
+    const todayEntries = entries.filter(e => new Date(e.clock_in).getTime() >= today && e.entry_type !== 'salary_received');
     
     const completedSeconds = todayEntries
       .filter((e) => e.clock_out && e.entry_type !== 'day_off')
@@ -217,7 +251,7 @@ export default function App() {
   const monthlyPay = (monthlySeconds / 3600) * HOURLY_RATE;
   const todaySeconds = calculateTodaySeconds();
   const todayPay = (todaySeconds / 3600) * HOURLY_RATE;
-  const recentLogs = entries.slice(0, 10);
+  const recentLogs = entries.filter((e) => e.entry_type !== 'salary_received').slice(0, 10);
   const TARGET_HOURS = 192;
   const targetPercentage = ((monthlySeconds / (TARGET_HOURS * 3600)) * 100).toFixed(1);
 
