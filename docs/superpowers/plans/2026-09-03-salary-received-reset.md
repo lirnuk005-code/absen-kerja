@@ -55,7 +55,7 @@ Expected: tidak ada `M` pada `src/App.tsx` (yang tersisa hanya `??` untuk script
 - Consumes: `periodStart: Date | null` (state baru, di-set oleh `fetchDashboardData` dan aksi `salary_received`).
 - Produces: `ActionType` menyertakan `'salary_received'`; `fetchDashboardData()` men-set `periodStart`; `executeAction` menangani `'salary_received'`; `calculateMonthlySeconds` / `calculateTodaySeconds` memakai `periodStart`; `recentLogs` mengecualikan marker.
 
-- [ ] **Step 2: Perluas `ActionType` dan tambah state `periodStart`**
+- [ ] **Step 1: Perluas `ActionType` dan tambah state `periodStart`**
 
 Ubah tipe:
 
@@ -72,7 +72,7 @@ const [periodStart, setPeriodStart] = useState<Date | null>(null);
 const [kpiIndex, setKpiIndex] = useState(0);
 ```
 
-- [ ] **Step 3: Ubah `fetchDashboardData`**
+- [ ] **Step 2: Ubah `fetchDashboardData`**
 
 Ganti seluruh body `fetchDashboardData` dengan:
 
@@ -114,7 +114,7 @@ const fetchDashboardData = async () => {
 };
 ```
 
-- [ ] **Step 4: Handle `salary_received` di `executeAction`**
+- [ ] **Step 3: Handle `salary_received` di `executeAction`**
 
 Masukkan branch baru sebelum `} else if (pendingAction === 'day_off')`:
 
@@ -133,7 +133,7 @@ Masukkan branch baru sebelum `} else if (pendingAction === 'day_off')`:
 }
 ```
 
-- [ ] **Step 5: Ubah `calculateMonthlySeconds`**
+- [ ] **Step 4: Ubah `calculateMonthlySeconds`**
 
 ```tsx
 const calculateMonthlySeconds = () => {
@@ -150,7 +150,7 @@ const calculateMonthlySeconds = () => {
 };
 ```
 
-- [ ] **Step 6: Ubah `calculateTodaySeconds`**
+- [ ] **Step 5: Ubah `calculateTodaySeconds`**
 
 Filter `todayEntries` agar mengecualikan marker:
 
@@ -158,18 +158,18 @@ Filter `todayEntries` agar mengecualikan marker:
 const todayEntries = entries.filter(e => new Date(e.clock_in).getTime() >= today && e.entry_type !== 'salary_received');
 ```
 
-- [ ] **Step 7: Ubah `recentLogs` agar mengecualikan marker**
+- [ ] **Step 6: Ubah `recentLogs` agar mengecualikan marker**
 
 ```tsx
 const recentLogs = entries.filter((e) => e.entry_type !== 'salary_received').slice(0, 10);
 ```
 
-- [ ] **Step 8: Verifikasi build**
+- [ ] **Step 7: Verifikasi build**
 
 Run: `npm run build`
 Expected: build sukses tanpa error TypeScript (tidak ada unused import — `noUnusedLocals` aktif).
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/App.tsx && git commit -m "feat: data layer reset periode via marker salary_received"
