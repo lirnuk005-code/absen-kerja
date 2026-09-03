@@ -86,14 +86,12 @@ export default function App() {
       const periodStartDate = latestMarker ? new Date(latestMarker.clock_in) : startOfMonth(new Date());
       setPeriodStart(periodStartDate);
 
-      // 2. Ambil entri mulai awal bulan kalender yang memuat periodStart
-      //    (log lama satu bulan terakhir tetap tampil di Recent Logs)
-      const since = startOfMonth(periodStartDate).toISOString();
-
+      // 2. Ambil SEMUA entri (tanpa filter bulan) agar riwayat log lama
+      //    selalu terlihat di Recent Logs. Perhitungan KPI yang memfilter
+      //    berdasarkan periodStart (lihat calculateMonthlySeconds).
       const { data, error } = await supabase
         .from('time_entries')
         .select('*')
-        .gte('clock_in', since)
         .order('clock_in', { ascending: false });
 
       if (error) throw error;
