@@ -1,6 +1,6 @@
 # "Gaji Diterima" (Reset Periode Tracker) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Tambahkan tombol "Gaji Diterima" di Quick Links worker yang menyisipkan marker `salary_received` dan mereset semua KPI periode (jam, gaji, target 192h) mulai dari tanggal reset.
 
@@ -31,7 +31,7 @@
 - Consumes: —
 - Produces: working tree bersih (kecuali file untracked script `*.js`) agar diff fitur bersih.
 
-- [ ] **Step 1: Commit baseline**
+- [x] **Step 1: Commit baseline**
 
 ```bash
 git add src/App.tsx && git commit -m "chore: baseline pending changes sebelum fitur Gaji Diterima"
@@ -39,7 +39,7 @@ git add src/App.tsx && git commit -m "chore: baseline pending changes sebelum fi
 
 *(Jika tidak ada perubahan yang perlu di-commit, lewati task ini — lanjut ke Task 1.)*
 
-- [ ] **Step 2: Verifikasi**
+- [x] **Step 2: Verifikasi**
 
 Run: `git status --short`
 Expected: tidak ada `M` pada `src/App.tsx` (yang tersisa hanya `??` untuk script root yang untracked — aman diabaikan).
@@ -55,7 +55,7 @@ Expected: tidak ada `M` pada `src/App.tsx` (yang tersisa hanya `??` untuk script
 - Consumes: `periodStart: Date | null` (state baru, di-set oleh `fetchDashboardData` dan aksi `salary_received`).
 - Produces: `ActionType` menyertakan `'salary_received'`; `fetchDashboardData()` men-set `periodStart`; `executeAction` menangani `'salary_received'`; `calculateMonthlySeconds` / `calculateTodaySeconds` memakai `periodStart`; `recentLogs` mengecualikan marker.
 
-- [ ] **Step 1: Perluas `ActionType` dan tambah state `periodStart`**
+- [x] **Step 1: Perluas `ActionType` dan tambah state `periodStart`**
 
 Ubah tipe:
 
@@ -72,7 +72,7 @@ const [periodStart, setPeriodStart] = useState<Date | null>(null);
 const [kpiIndex, setKpiIndex] = useState(0);
 ```
 
-- [ ] **Step 2: Ubah `fetchDashboardData`**
+- [x] **Step 2: Ubah `fetchDashboardData`**
 
 Ganti seluruh body `fetchDashboardData` dengan:
 
@@ -114,7 +114,7 @@ const fetchDashboardData = async () => {
 };
 ```
 
-- [ ] **Step 3: Handle `salary_received` di `executeAction`**
+- [x] **Step 3: Handle `salary_received` di `executeAction`**
 
 Masukkan branch baru sebelum `} else if (pendingAction === 'day_off')`:
 
@@ -133,7 +133,7 @@ Masukkan branch baru sebelum `} else if (pendingAction === 'day_off')`:
 }
 ```
 
-- [ ] **Step 4: Ubah `calculateMonthlySeconds`**
+- [x] **Step 4: Ubah `calculateMonthlySeconds`**
 
 ```tsx
 const calculateMonthlySeconds = () => {
@@ -150,7 +150,7 @@ const calculateMonthlySeconds = () => {
 };
 ```
 
-- [ ] **Step 5: Ubah `calculateTodaySeconds`**
+- [x] **Step 5: Ubah `calculateTodaySeconds`**
 
 Filter `todayEntries` agar mengecualikan marker:
 
@@ -158,18 +158,18 @@ Filter `todayEntries` agar mengecualikan marker:
 const todayEntries = entries.filter(e => new Date(e.clock_in).getTime() >= today && e.entry_type !== 'salary_received');
 ```
 
-- [ ] **Step 6: Ubah `recentLogs` agar mengecualikan marker**
+- [x] **Step 6: Ubah `recentLogs` agar mengecualikan marker**
 
 ```tsx
 const recentLogs = entries.filter((e) => e.entry_type !== 'salary_received').slice(0, 10);
 ```
 
-- [ ] **Step 7: Verifikasi build**
+- [x] **Step 7: Verifikasi build**
 
 Run: `npm run build`
 Expected: build sukses tanpa error TypeScript (tidak ada unused import — `noUnusedLocals` aktif).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/App.tsx && git commit -m "feat: data layer reset periode via marker salary_received"
@@ -188,7 +188,7 @@ git add src/App.tsx && git commit -m "feat: data layer reset periode via marker 
 
 > Impor `Banknote` diletakkan di sini (Task 2), bukan Task 1 — karena `noUnusedLocals=true`, impor yang belum dipakai akan menggagalkan `npm run build` di akhir Task 1.
 
-- [ ] **Step 1: Tambah import `Banknote`**
+- [x] **Step 1: Tambah import `Banknote`**
 
 Ubah blok import `lucide-react` untuk menambah `Banknote` (letakkan setelah `AlertTriangle`):
 
@@ -211,7 +211,7 @@ import {
 } from 'lucide-react';
 ```
 
-- [ ] **Step 2: Tambah teks modal konfirmasi**
+- [x] **Step 2: Tambah teks modal konfirmasi**
 
 Di dalam blok `<p ... className="text-[#888] text-sm mb-8">`, tambah satu baris:
 
@@ -219,7 +219,7 @@ Di dalam blok `<p ... className="text-[#888] text-sm mb-8">`, tambah satu baris:
 {pendingAction === 'salary_received' && "Are you sure you want to log SALARY RECEIVED? This resets the period tracker — all counters (time, earnings, target) will restart from now."}
 ```
 
-- [ ] **Step 2: Tambah kartu "Gaji Diterima" di Quick Links**
+- [x] **Step 2: Tambah kartu "Gaji Diterima" di Quick Links**
 
 Setelah kartu "Libur" (penutup `</div>` kartu day_off, sebelum `</div>` penutup grid), tambah:
 
@@ -245,7 +245,7 @@ Ubah class grid Quick Links dari `grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6
 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6">
 ```
 
-- [ ] **Step 3: Label KPI "THIS MONTH" → "THIS PERIOD"**
+- [x] **Step 3: Label KPI "THIS MONTH" → "THIS PERIOD"**
 
 Ada dua tempat label `THIS MONTH` (kartu TOTAL EARNED dan kartu TOTAL TIME). Ganti keduanya:
 
@@ -253,7 +253,7 @@ Ada dua tempat label `THIS MONTH` (kartu TOTAL EARNED dan kartu TOTAL TIME). Gan
 <span className="text-xs text-[#555] font-mono">THIS PERIOD</span>
 ```
 
-- [ ] **Step 4: Tampilkan tanggal mulai periode di kartu TOTAL TIME**
+- [x] **Step 4: Tampilkan tanggal mulai periode di kartu TOTAL TIME**
 
 Di dalam kartu TOTAL TIME, tepat setelah blok progress bar (`</div>` penutup progress bar), tambah:
 
@@ -265,12 +265,12 @@ Di dalam kartu TOTAL TIME, tepat setelah blok progress bar (`</div>` penutup pro
 
 *(Tidak menambah import date-fns — pakai `toLocaleDateString`.)*
 
-- [ ] **Step 5: Verifikasi build & lint**
+- [x] **Step 5: Verifikasi build & lint**
 
 Run: `npm run build && npm run lint`
 Expected: keduanya sukses tanpa error.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/App.tsx && git commit -m "feat: tombol Gaji Diterima + label periode di UI"
@@ -287,16 +287,16 @@ git add src/App.tsx && git commit -m "feat: tombol Gaji Diterima + label periode
 - Consumes: build Task 1 & 2.
 - Produces: konfirmasi fitur berfungsi di browser.
 
-- [ ] **Step 1: Jalankan dev server**
+- [x] **Step 1: Jalankan dev server**
 
 Run: `npm run dev`
 Buka `http://localhost:5173` di browser (mode mobile + desktop jika bisa).
 
-- [ ] **Step 2: Login sebagai Deksa**
+- [x] **Step 2: Login sebagai Deksa**
 
 Expected: Quick Links menampilkan 5 kartu (Clock In, Suspend, Clock Out, Libur, **Gaji Diterima**).
 
-- [ ] **Step 3: Klik "Gaji Diterima"**
+- [x] **Step 3: Klik "Gaji Diterima"**
 
 Expected:
 - Muncul modal konfirmasi "// CONFIRM ACTION".
@@ -304,17 +304,17 @@ Expected:
 - Label "PERIOD START" menampilkan tanggal hari ini.
 - Recent Logs tidak menampilkan baris marker `salary_received`; log lama (jika ada dalam bulan yang sama) tetap tampil.
 
-- [ ] **Step 4: Verifikasi state tambahan**
+- [x] **Step 4: Verifikasi state tambahan**
 
 Dengan marker aktif, klik **Clock In** → **Clock Out** (urutan normal):
 Expected: KPI periode bertambah sesuai durasi sesi singkat; status kembali IDLE.
 
-- [ ] **Step 5: Verifikasi modal tidak bisa dobel-execute**
+- [x] **Step 5: Verifikasi modal tidak bisa dobel-execute**
 
 Klik "Gaji Diterima" lalu EXECUTE dua kali cepat:
 Expected: tombol menampilkan EXECUTING... dan hanya satu marker tersimpan (guard `isProcessing`).
 
-- [ ] **Step 6: Update grafik knowledge graph**
+- [x] **Step 6: Update grafik knowledge graph**
 
 Run: `graphify update .`
 Expected: selesai tanpa error (AST-only, tidak ada biaya API).
