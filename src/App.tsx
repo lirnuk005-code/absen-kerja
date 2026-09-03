@@ -255,7 +255,7 @@ export default function App() {
   const targetPercentage = ((monthlySeconds / (TARGET_HOURS * 3600)) * 100).toFixed(1);
 
   return (
-    <div className="min-h-screen flex bg-black text-[#EAEAEA] relative">
+    <div className="h-dvh flex bg-black text-[#EAEAEA] relative overflow-hidden">
       
       {/* Confirmation Modal */}
       {pendingAction && (
@@ -309,7 +309,7 @@ export default function App() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <header className="h-14 border-b border-[#1E1E1E] flex items-center justify-between px-4 md:px-6 bg-[#050505]">
           <div className="flex items-center gap-3 text-sm font-medium">
             <Command size={16} className="text-[#888] md:hidden" />
