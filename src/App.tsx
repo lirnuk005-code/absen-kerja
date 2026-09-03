@@ -38,6 +38,7 @@ export default function App() {
   const [currentDuration, setCurrentDuration] = useState(0);
 
   const [pendingAction, setPendingAction] = useState<ActionType>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [kpiIndex, setKpiIndex] = useState(0);
 
   useEffect(() => {
@@ -88,7 +89,8 @@ export default function App() {
   };
 
   const executeAction = async () => {
-    if (!pendingAction) return;
+    if (!pendingAction || isProcessing) return;
+    setIsProcessing(true);
     
     try {
       if (pendingAction === 'clock_in') {
@@ -129,6 +131,7 @@ export default function App() {
       alert(`Action failed: ${pendingAction}`);
     } finally {
       setPendingAction(null);
+      setIsProcessing(false);
     }
   };
 
@@ -215,6 +218,8 @@ export default function App() {
   const todaySeconds = calculateTodaySeconds();
   const todayPay = (todaySeconds / 3600) * HOURLY_RATE;
   const recentLogs = entries.slice(0, 10);
+  const TARGET_HOURS = 192;
+  const targetPercentage = ((monthlySeconds / (TARGET_HOURS * 3600)) * 100).toFixed(1);
 
   return (
     <div className="min-h-screen flex bg-black text-[#EAEAEA] relative">
@@ -243,9 +248,10 @@ export default function App() {
               </button>
               <button 
                 onClick={executeAction}
-                className="flex-1 py-2 text-sm font-semibold bg-white text-black hover:bg-[#EAEAEA] transition-colors rounded-sm"
+                disabled={isProcessing}
+                className="flex-1 py-2 text-sm font-semibold bg-white text-black hover:bg-[#EAEAEA] transition-colors rounded-sm disabled:opacity-50"
               >
-                EXECUTE
+                {isProcessing ? 'EXECUTING...' : 'EXECUTE'}
               </button>
             </div>
           </div>
@@ -339,6 +345,18 @@ export default function App() {
                       {formatDuration(monthlySeconds)}
                     </span>
                     <span className="text-[#666] text-sm">hours</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-[#1E1E1E]">
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className="text-[#888] font-mono">TARGET: {TARGET_HOURS}H</span>
+                      <span className="text-white font-mono">{targetPercentage}%</span>
+                    </div>
+                    <div className="w-full bg-[#1A1A1A] h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-[#B266FF] h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(Number(targetPercentage), 100)}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
 
