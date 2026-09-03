@@ -13,7 +13,8 @@ import {
   LogOut,
   AlertTriangle,
   Terminal,
-  Sun
+  Sun,
+  Banknote
 } from 'lucide-react';
 import { format, differenceInSeconds, startOfMonth, startOfDay } from 'date-fns';
 
@@ -272,6 +273,7 @@ export default function App() {
               {pendingAction === 'suspend' && "Are you sure you want to SUSPEND tracking? The timer will pause until you clock in again."}
               {pendingAction === 'clock_out' && "Are you sure you want to HALT the process? This ends your current shift."}
               {pendingAction === 'day_off' && "Are you sure you want to log today as a DAY OFF? This will record a day off entry."}
+              {pendingAction === 'salary_received' && "Are you sure you want to log SALARY RECEIVED? This resets the period tracker — all counters (time, earnings, target) will restart from now."}
             </p>
             <div className="flex gap-4">
               <button 
@@ -354,7 +356,7 @@ export default function App() {
                       </div>
                       TOTAL EARNED
                     </div>
-                    <span className="text-xs text-[#555] font-mono">THIS MONTH</span>
+                    <span className="text-xs text-[#555] font-mono">THIS PERIOD</span>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold font-mono text-white">
@@ -372,7 +374,7 @@ export default function App() {
                       </div>
                       TOTAL TIME
                     </div>
-                    <span className="text-xs text-[#555] font-mono">THIS MONTH</span>
+                    <span className="text-xs text-[#555] font-mono">THIS PERIOD</span>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold font-mono text-white">
@@ -390,6 +392,9 @@ export default function App() {
                         className="bg-[#B266FF] h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(Number(targetPercentage), 100)}%` }}
                       />
+                    </div>
+                    <div className="mt-2 text-[10px] font-mono text-[#555]">
+                      PERIOD START: {(periodStart ?? new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -436,7 +441,7 @@ export default function App() {
                 <h2 className="text-[#666] text-xs font-semibold tracking-widest mb-4 flex items-center gap-4">
                   QUICK LINKS <div className="h-[1px] flex-1 bg-[#1E1E1E]" />
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6">
                   
                   <div 
                     onClick={!activeEntry ? () => setPendingAction('clock_in') : undefined}
@@ -491,6 +496,20 @@ export default function App() {
                     <h3 className="text-xs md:text-sm font-semibold text-white leading-tight">Libur</h3>
                     <p className="text-[#888] text-xs leading-relaxed hidden md:block">
                       Mark today as a day off. No compute time will be counted for this day.
+                    </p>
+                  </div>
+
+                  <div 
+                    onClick={!activeEntry ? () => setPendingAction('salary_received') : undefined}
+                    className={`cmd-card cmd-action-card p-3 md:p-6 rounded-sm flex flex-col gap-2 md:gap-3 items-center text-center md:items-start md:text-left ${activeEntry ? 'disabled' : ''}`}
+                  >
+                    <div className="cmd-card-inner" />
+                    <div className="w-8 h-8 rounded bg-[#1A1A1A] border border-[#333] flex items-center justify-center mb-1 md:mb-2">
+                      <Banknote size={16} className="text-white" />
+                    </div>
+                    <h3 className="text-xs md:text-sm font-semibold text-white leading-tight">Gaji Diterima</h3>
+                    <p className="text-[#888] text-xs leading-relaxed hidden md:block">
+                      Tandai gaji telah diterima. Semua penghitung periode (jam, gaji, target) direset dari nol.
                     </p>
                   </div>
 
