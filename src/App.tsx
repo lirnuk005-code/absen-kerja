@@ -42,6 +42,7 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [periodStart, setPeriodStart] = useState<Date | null>(null);
   const [kpiIndex, setKpiIndex] = useState(0);
+  const [showAllLogs, setShowAllLogs] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -250,7 +251,8 @@ export default function App() {
   const monthlyPay = (monthlySeconds / 3600) * HOURLY_RATE;
   const todaySeconds = calculateTodaySeconds();
   const todayPay = (todaySeconds / 3600) * HOURLY_RATE;
-  const recentLogs = entries.filter((e) => e.entry_type !== 'salary_received').slice(0, 10);
+  const loggedEntries = entries.filter((e) => e.entry_type !== 'salary_received');
+  const recentLogs = showAllLogs ? loggedEntries : loggedEntries.slice(0, 10);
   const TARGET_HOURS = 192;
   const targetPercentage = ((monthlySeconds / (TARGET_HOURS * 3600)) * 100).toFixed(1);
 
@@ -560,6 +562,18 @@ export default function App() {
                         </div>
                       ))
                     )}
+
+                    {loggedEntries.length > 10 && (
+                      <div className="pt-3 border-t border-[#1E1E1E] flex justify-end">
+                        <button
+                          onClick={() => setShowAllLogs(v => !v)}
+                          className="text-xs font-mono text-[#B266FF] hover:text-white transition-colors cursor-pointer"
+                        >
+                          {showAllLogs ? '[ TAMPILKAN 10 TERBARU ]' : '[ TAMPILKAN SEMUA ]'}
+                        </button>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>
