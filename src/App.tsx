@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Terminal,
   Sun,
-  Banknote
+  Banknote,
+  Printer
 } from 'lucide-react';
 import { format, differenceInSeconds, startOfMonth, startOfDay } from 'date-fns';
 
@@ -256,8 +257,45 @@ export default function App() {
   const TARGET_HOURS = 192;
   const targetPercentage = ((monthlySeconds / (TARGET_HOURS * 3600)) * 100).toFixed(1);
 
+  // --- Manager PDF report (periode gaji berjalan) ---
+  const reportSessions = entries
+    .filter((e) =>
+      e.entry_type !== 'salary_received' &&
+      e.entry_type !== 'day_off' &&
+      new Date(e.clock_in).getTime() >= (periodStart?.getTime() ?? startOfMonth(new Date()).getTime())
+    )
+    .map((e) => {
+      const inDate = new Date(e.clock_in);
+      const outDate = e.clock_out ? new Date(e.clock_out) : new Date();
+      return {
+        id: e.id,
+        clockIn: inDate,
+        clockOut: e.clock_out ? outDate : null,
+        seconds: differenceInSeconds(outDate, inDate),
+      };
+    })
+    .sort((a, b) => a.clockIn.getTime() - b.clockIn.getTime());
+
+  const reportSeconds = reportSessions.reduce((t, s) => t + s.seconds, 0);
+  const reportPay = (reportSeconds / 3600) * HOURLY_RATE;
+  const reportDays = new Set(reportSessions.map((s) => format(s.clockIn, 'yyyy-MM-dd'))).size;
+  const periodStartLabel = format(periodStart ?? new Date(), 'dd MMM yyyy');
+  const periodEndLabel = format(new Date(), 'dd MMM yyyy');
+
+  const handlePrintReport = () => {
+    const prevTitle = document.title;
+    document.title = `Laporan-Jam-Kerja-Deksa-${format(periodStart ?? new Date(), 'yyyyMMdd')}`;
+    const restore = () => {
+      document.title = prevTitle;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    window.print();
+  };
+
   return (
-    <div className="h-dvh flex bg-black text-[#EAEAEA] relative overflow-hidden">
+    <>
+    <div className="h-dvh flex bg-black text-[#EAEAEA] relative overflow-hidden print:hidden">
       
       {/* Confirmation Modal */}
       {pendingAction && (
@@ -340,6 +378,29 @@ export default function App() {
                 {currentUser === 'Ketut' ? "Viewing Deksa's workspace logs and KPIs." : "Overview of your Attendance Command workspace"}
               </p>
             </div>
+
+            {currentUser === 'Ketut' && (
+              <div className="mb-10">
+                <h2 className="text-[#666] text-xs font-semibold tracking-widest mb-4 flex items-center gap-4">
+                  MANAGER TOOLS <div className="h-[1px] flex-1 bg-[#1E1E1E]" />
+                </h2>
+                <div
+                  onClick={handlePrintReport}
+                  className="cmd-card cmd-action-card p-6 rounded-sm flex items-center gap-4"
+                >
+                  <div className="cmd-card-inner" />
+                  <div className="w-10 h-10 rounded bg-[#1A1A1A] border border-[#333] flex items-center justify-center shrink-0">
+                    <Printer size={18} className="text-[#B266FF]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Generate Laporan PDF</h3>
+                    <p className="text-[#888] text-xs mt-1">
+                      Cetak rekap jam kerja Deksa periode {periodStartLabel} – {periodEndLabel}. Pilih "Save as PDF" di dialog cetak.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mb-10">
               <h2 className="text-[#666] text-xs font-semibold tracking-widest mb-4 flex items-center gap-4">
@@ -583,5 +644,98 @@ export default function App() {
         </main>
       </div>
     </div>
+
+    {/* Print-only report */}
+    {currentUser === 'Ketut' && (
+      <div className="hidden print:block bg-white text-black">
+        <div className="border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-2xl font-bold tracking-wide">LAPORAN JAM KERJA</h1>
+          <p className="text-sm mt-1 text-gray-600">Attendance Dashboard</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div>
+            <span className="text-gray-500">Worker</span>
+            <p className="font-semibold">Deksa</p>
+          </div>
+          <div>
+            <span className="text-gray-500">Periode</span>
+            <p className="font-semibold">{periodStartLabel} – {periodEndLabel}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-3 mb-8 text-center">
+          <div className="border border-gray-300 rounded p-3">
+            <div className="text-[10px] text-gray-500 tracking-wide">TOTAL JAM</div>
+            <div className="text-lg font-bold font-mono">{formatDuration(reportSeconds)}</div>
+          </div>
+          <div className="border border-gray-300 rounded p-3">
+            <div className="text-[10px] text-gray-500 tracking-wide">TOTAL GAJI</div>
+            <div className="text-lg font-bold font-mono">Rp {Math.floor(reportPay).toLocaleString('id-ID')}</div>
+          </div>
+          <div className="border border-gray-300 rounded p-3">
+            <div className="text-[10px] text-gray-500 tracking-wide">HARI KERJA</div>
+            <div className="text-lg font-bold font-mono">{reportDays}</div>
+          </div>
+          <div className="border border-gray-300 rounded p-3">
+            <div className="text-[10px] text-gray-500 tracking-wide">SESI</div>
+            <div className="text-lg font-bold font-mono">{reportSessions.length}</div>
+          </div>
+        </div>
+
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black text-left">
+              <th className="py-2 pr-2">No</th>
+              <th className="py-2 pr-2">Tanggal</th>
+              <th className="py-2 pr-2">Jam Masuk</th>
+              <th className="py-2 pr-2">Jam Keluar</th>
+              <th className="py-2 pr-2">Durasi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportSessions.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-6 text-center text-gray-500 font-mono">[ TIDAK ADA DATA ]</td>
+              </tr>
+            ) : (
+              reportSessions.map((s, i) => (
+                <tr key={s.id} className="border-b border-gray-200">
+                  <td className="py-2 pr-2">{i + 1}</td>
+                  <td className="py-2 pr-2">{format(s.clockIn, 'dd MMM yyyy')}</td>
+                  <td className="py-2 pr-2 font-mono">{format(s.clockIn, 'HH:mm:ss')}</td>
+                  <td className="py-2 pr-2 font-mono">{s.clockOut ? format(s.clockOut, 'HH:mm:ss') : 'RUNNING'}</td>
+                  <td className="py-2 pr-2 font-mono">{formatDuration(s.seconds)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+          {reportSessions.length > 0 && (
+            <tfoot>
+              <tr className="border-t-2 border-black font-bold">
+                <td colSpan={4} className="py-2 pr-2 text-right">TOTAL</td>
+                <td className="py-2 pr-2 font-mono">{formatDuration(reportSeconds)}</td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+
+        <div className="mt-12 flex justify-between text-sm">
+          <div className="text-center">
+            <p>Manager</p>
+            <div className="h-16" />
+            <p className="font-semibold border-t border-black pt-1 px-6">Ketut Gede Sri Diwya</p>
+          </div>
+          <div className="text-center">
+            <p>Worker</p>
+            <div className="h-16" />
+            <p className="font-semibold border-t border-black pt-1 px-6">Deksa</p>
+          </div>
+        </div>
+
+        <p className="mt-8 text-xs text-gray-500">Dicetak: {format(new Date(), 'dd MMM yyyy HH:mm')}</p>
+      </div>
+    )}
+    </>
   );
 }

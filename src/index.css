@@ -85,3 +85,15 @@
     cursor: not-allowed;
   }
 }
+
+/* Print report: bersihkan chrome browser, margin halaman A4 */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
